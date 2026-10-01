@@ -16,6 +16,7 @@ COMMANDS: Dict[str, Dict[str, Any]] = {
     "/help": {
         "description": "Показать справку по всем командам или по конкретной команде",
         "usage": "/help [command]",
+        "example": "/help /index build",
         "arguments": [
             {"name": "command", "required": False, "description": "команда, для которой показать справку"},
         ],
@@ -23,10 +24,12 @@ COMMANDS: Dict[str, Dict[str, Any]] = {
     "/index": {
         "description": "Управление индексами документов",
         "usage": "/index <subcommand> [options]",
+        "example": "/index build data/documents --strategy structural --name my_index",
         "subcommands": {
             "build": {
                 "description": "Построить индекс из документов (загрузка -> чанкинг -> эмбеддинги -> FAISS+SQLite)",
                 "usage": "/index build <path> [--strategy fixed|structural] [--name <index_name>] [--config <path>]",
+                "example": "/index build data/documents --strategy fixed --name my_index",
                 "arguments": [
                     {"name": "path", "required": False, "description": "путь к файлу/папке с документами (по умолчанию из конфига)"},
                 ],
@@ -39,21 +42,25 @@ COMMANDS: Dict[str, Dict[str, Any]] = {
             "list": {
                 "description": "Показать список доступных индексов",
                 "usage": "/index list",
+                "example": "/index list",
             },
             "info": {
                 "description": "Показать метаданные индекса",
                 "usage": "/index info <index_name>",
+                "example": "/index info my_index",
                 "arguments": [{"name": "index_name", "required": True, "description": "имя индекса"}],
             },
             "stats": {
                 "description": "Вывести статистику по индексу",
                 "usage": "/index stats <index_name> [--format console|json|csv|markdown]",
+                "example": "/index stats my_index --format markdown",
                 "arguments": [{"name": "index_name", "required": True, "description": "имя индекса"}],
                 "flags": [{"name": "format", "choices": FORMAT_CHOICES, "description": "формат вывода"}],
             },
             "compare": {
                 "description": "Сравнить статистику двух индексов (стратегий)",
                 "usage": "/index compare <index1> <index2> [--format console|json|csv|markdown]",
+                "example": "/index compare fixed_idx structural_idx --format markdown",
                 "arguments": [
                     {"name": "index1", "required": True, "description": "первый индекс"},
                     {"name": "index2", "required": True, "description": "второй индекс"},
@@ -63,6 +70,7 @@ COMMANDS: Dict[str, Dict[str, Any]] = {
             "show-chunk": {
                 "description": "Показать полный текст и метаданные чанка",
                 "usage": "/index show-chunk <index_name> <chunk_id>",
+                "example": "/index show-chunk my_index my_index-structural-0000",
                 "arguments": [
                     {"name": "index_name", "required": True, "description": "имя индекса"},
                     {"name": "chunk_id", "required": True, "description": "идентификатор чанка"},
@@ -71,6 +79,7 @@ COMMANDS: Dict[str, Dict[str, Any]] = {
             "list-chunks": {
                 "description": "Список чанков с фильтрами",
                 "usage": "/index list-chunks <index_name> [--source <source>] [--section <section>] [--limit N]",
+                "example": "/index list-chunks my_index --source intro.txt --limit 10",
                 "arguments": [{"name": "index_name", "required": True, "description": "имя индекса"}],
                 "flags": [
                     {"name": "source", "description": "фильтр по source"},
@@ -81,6 +90,7 @@ COMMANDS: Dict[str, Dict[str, Any]] = {
             "delete": {
                 "description": "Удалить индекс",
                 "usage": "/index delete <index_name>",
+                "example": "/index delete my_index",
                 "arguments": [{"name": "index_name", "required": True, "description": "имя индекса"}],
             },
         },
@@ -88,17 +98,34 @@ COMMANDS: Dict[str, Dict[str, Any]] = {
     "/debug": {
         "description": "Включить/выключить отладочный режим (показывает эмбеддинги и стектрейсы ошибок)",
         "usage": "/debug on|off",
+        "example": "/debug on",
         "arguments": [{"name": "mode", "required": True, "description": "on или off"}],
     },
     "/exit": {
         "description": "Завершить работу",
         "usage": "/exit",
+        "example": "/exit",
     },
 }
 
 
 def list_index_subcommands() -> List[str]:
     return list(COMMANDS["/index"]["subcommands"].keys())
+
+
+def _examples_block() -> List[str]:
+    """Собрать список примеров для каждой команды (для общей справки)."""
+    lines: List[str] = []
+    entries: List[tuple] = [("/help", COMMANDS["/help"]), ("/index", COMMANDS["/index"])]
+    for sub, spec in COMMANDS["/index"]["subcommands"].items():
+        entries.append((f"/index {sub}", spec))
+    entries.append(("/debug", COMMANDS["/debug"]))
+    entries.append(("/exit", COMMANDS["/exit"]))
+    for name, spec in entries:
+        example = spec.get("example")
+        if example:
+            lines.append(f"  {name:<18} {example}")
+    return lines
 
 
 def build_help(command: str = None) -> str:
@@ -116,6 +143,9 @@ def build_help(command: str = None) -> str:
         lines.append("Подкоманды /index:")
         for sub in COMMANDS["/index"]["subcommands"]:
             lines.append(f"  /index {sub:<14} {COMMANDS['/index']['subcommands'][sub]['description']}")
+        lines.append("")
+        lines.append("Примеры использования:")
+        lines.extend(_examples_block())
         return "\n".join(lines)
 
     # Справка по конкретной команде.
@@ -127,6 +157,12 @@ def build_help(command: str = None) -> str:
         for sub, spec in COMMANDS["/index"]["subcommands"].items():
             lines.append(f"  {spec['usage']}")
             lines.append(f"      {spec['description']}")
+        lines.append("")
+        lines.append("Примеры:")
+        for sub, spec in COMMANDS["/index"]["subcommands"].items():
+            example = spec.get("example")
+            if example:
+                lines.append(f"  /index {sub:<12} {example}")
         return "\n".join(lines)
 
     if command.startswith("/index "):
@@ -142,6 +178,9 @@ def build_help(command: str = None) -> str:
             for flag in spec.get("flags", []):
                 choices = f" [{', '.join(flag['choices'])}]" if "choices" in flag else ""
                 lines.append(f"  --{flag['name']}{choices}: {flag.get('description', '')}")
+            example = spec.get("example")
+            if example:
+                lines.append(f"Пример: {example}")
             return "\n".join(lines)
         return f"Неизвестная подкоманда /index: {sub!r}\n" + build_help("/index")
 
@@ -152,6 +191,9 @@ def build_help(command: str = None) -> str:
         for arg in spec.get("arguments", []):
             req = "обязательный" if arg.get("required") else "опциональный"
             lines.append(f"  {arg['name']}: {arg.get('description', '')} ({req})")
+        example = spec.get("example")
+        if example:
+            lines.append(f"Пример: {example}")
         return "\n".join(lines)
 
     return f"Неизвестная команда: {command!r}\n" + build_help()
