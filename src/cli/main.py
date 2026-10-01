@@ -128,6 +128,12 @@ def _cmd_index(app: App, args: List[str]) -> str:
 
 def _cmd_build(app: App, args: List[str]) -> str:
     pos, flags = parse_args(args)
+    if len(pos) > 1:
+        raise ValueError(
+            "Лишние позиционные аргументы. Стратегию и имя задавайте через флаги. "
+            "Правильный синтаксис: /index build <path> [--strategy fixed|structural] [--name <index_name>] [--config <path>]. "
+            f"Лишние аргументы: {' '.join(repr(a) for a in pos[1:])}"
+        )
     config = app.config
     if flags.get("config"):
         config = Config.load(flags["config"])
