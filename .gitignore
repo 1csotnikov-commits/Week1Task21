@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Сгенерированные индексы и модели
+data/index/*
+!data/index/.gitkeep
+*.index
+*.npy
+*.db
+
+# Отчёты
+*.report.json
+*.report.csv
+*.report.md
+
+# IDE / OS
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store

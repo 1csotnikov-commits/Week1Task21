@@ -1,0 +1,17 @@
+{
+  "project": "Week1Task21",
+  "description": "Локальный пайплайн индексации документов",
+  "embedding": {
+    "provider": "nomic",
+    "model": "nomic-ai/nomic-embed-text-v2-moe",
+    "dimensions": 768
+  },
+  "chunking": {
+    "strategies": ["fixed_size", "structural"],
+    "default": "structural"
+  },
+  "storage": {
+    "vector_store": "faiss",
+    "metadata_store": "sqlite"
+  }
+}

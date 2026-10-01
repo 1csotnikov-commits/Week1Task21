@@ -1,0 +1,23 @@
+embedding:
+  provider: nomic
+  model: nomic-ai/nomic-embed-text-v2-moe
+  trust_remote_code: true
+  device: cpu
+  batch_size: 16
+
+chunking:
+  default_strategy: structural
+  fixed_size:
+    chunk_size: 800
+    overlap: 150
+  structural:
+    max_chunk_size: 1500
+    split_by: heading
+
+index:
+  store: faiss_sqlite
+  path: data/index
+
+documents:
+  path: data/documents
+  extensions: [.md, .txt, .py, .js, .json]
